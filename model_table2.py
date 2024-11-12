@@ -3,7 +3,9 @@ import numpy as np
 import cheese as che
 
 # Cargar la imagen del tablero
-imagen = cv2.imread('img/tabla.jpg')
+#imagen = cv2.imread('img/tabla.jpg')
+imagen = cv2.imread('imgtemp/tablaR.jpg')
+
 imagen= cv2.resize(imagen, (0, 0), fx=0.8, fy=0.8)
 
 # Detectar intersecciones
@@ -17,6 +19,8 @@ puntos_ordenados = che.ordenar_puntos(puntos_interseccion)
 
 indices = che.obtener_indices(8, 8)
 
+cv2.imshow('lineas', imagen_procesada)
+cv2.waitKey(0)
 for indice in indices:
 
     punto1 = tuple(np.int32(puntos_ordenados[indice[0]]))
