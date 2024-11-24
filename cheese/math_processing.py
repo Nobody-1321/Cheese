@@ -119,3 +119,17 @@ def get_indices(columns, rows):
            indices.append((k1 + j, k1 + j + 1, k2 + j, k2 + j + 1))
 
     return indices
+
+def process_roi_coords(roi_coords, image_width, image_height):
+    x1, y1, x2, y2 = map(int, [roi_coords["x1"], roi_coords["y1"], roi_coords["x2"], roi_coords["y2"]])
+    
+    x1 = max(0, min(x1, image_width))
+    x2 = max(0, min(x2, image_width))
+    y1 = max(0, min(y1, image_height))
+    y2 = max(0, min(y2, image_height))
+
+    return {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
+
+def get_roi(frame, roi_coords):
+    x1, y1, x2, y2 = map(int, [roi_coords["x1"], roi_coords["y1"], roi_coords["x2"], roi_coords["y2"]])
+    return frame[min(y1, y2):max(y1, y2), min(x1, x2):max(x1, x2)] 

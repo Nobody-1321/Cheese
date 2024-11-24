@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 
+
 def open_image(path):
     return cv.imread(path)
 
@@ -74,14 +75,43 @@ def get_frame(cap):
         return frame
     return None
 
-def get_frame_tex(cap):
-    ret, frame = cap.read()
-    if ret:
-        frame = cv.cvtColor(frame, cv.COLOR_BGR2RGBA)
-        frame_data = frame.flatten().astype(np.float32) / 255.0
-        return frame_data
-    return None
+def image_to_texture(image):
+    image = cv.cvtColor(image, cv.COLOR_BGR2RGBA)
+    image_data = image.flatten().astype(np.float32) / 255.0
+    return image_data
 
 def resize_image(image, width, height):
     return cv.resize(image, (width, height))
 
+def draw_roi(image, roi_coords, color, thickness):
+    
+    x1, y1, x2, y2 = map(int, [roi_coords["x1"], roi_coords["y1"], roi_coords["x2"], roi_coords["y2"]])
+    print (x1, y1, x2, y2)
+    #checar si las coordenadas estan en el rango de la imagen si estan fuera del rango no dibujar
+    
+    if x1 < 0  or x1 > image.shape[1]:
+        return image
+    if x2 < 0  or x2 > image.shape[1]:
+        return image
+    if y1 < 0  or y1 > image.shape[0]:
+        return image
+    if y2 < 0  or y2 > image.shape[0]:
+        return image
+    
+    #dibujar solo las coordnas son diferentes
+    if x1 != x2 and y1 != y2:
+        cv.rectangle(image, (x1, y1), (x2, y2), color, thickness)
+
+    return image
+    
+
+def save_image(path, image):
+    if image.shape[0] > 0 and image.shape[1] > 0 and image.shape[2] == 3:
+        cv.imwrite(path, image)
+    else:
+        print("No se pudo guardar la imagen")
+        
+        
+
+
+    

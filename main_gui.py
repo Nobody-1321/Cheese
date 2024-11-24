@@ -4,43 +4,38 @@ import numpy as np
 import cheese as che
 import cv2
 
-textures_id = []
 cap = che.capture_video(0, 1280, 720, 30)
 drawing = False
 roi_coords = {"x1": 0, "y1": 0, "x2": 0, "y2": 0}
+i =0    
+
+def select_texture(sender, app_data):
+    global textures_data
+    texture = app_data
+    print(texture)
+    dpg.set_value(textures_data[0]["id"], texture)
 
 def update_texture():
-    global textures_id, cap
-    frame_data = che.get_frame_tex(cap)
-    dpg.set_value(textures_id[0]["id"], frame_data)
+    global cap, roi_coords,i
 
-    if drawing or (roi_coords["x1"] != roi_coords["x2"] and roi_coords["y1"] != roi_coords["y2"]):
-        x1, y1, x2, y2 = roi_coords["x1"], roi_coords["y1"], roi_coords["x2"], roi_coords["y2"]
-        
-
-def mouse_release_callback(sender, app_data):
-    global drawing
-    drawing = False
-    print("Mouse released")
-
-def mouse_press_callback(sender, app_data):
-    global roi_coords, drawing
-    mouse_x, mouse_y = dpg.get_mouse_pos()
-    roi_coords["x1"], roi_coords["y1"] = mouse_x, mouse_y
-    drawing = True
-    print("Mouse pressed")
-
-def draw_rectangle_mouse_callback(sender, app_data):
-    global roi_coords, drawing
-    mouse_x, mouse_y = dpg.get_mouse_pos()
-
-    if drawing:
-        roi_coords["x2"], roi_coords["y2"] = mouse_x, mouse_y
-        update_texture()
+    che.update_texture_frame("camera_texture", che.get_frame(cap))
+    che.update_roi_coords(roi_coords)
+    che.update_texture_frame("camera_texture", che.draw_roi(che.get_texture("camera_texture")["frame"]
+                                                            , roi_coords, (0, 255, 0), 2))
     
+    #if i == 0:
+    #    current_items = dpg.get_item_configuration("listbox_id")["items"]
+    #    current_items.append("roi")
+    #    dpg.configure_item("listbox_id", items=current_items)
+    #    i = 1
+    
+        
+    
+    frame_data = che.image_to_texture(che.get_texture("camera_texture")["frame"])
+    dpg.set_value(che.get_texture("camera_texture")["id"], frame_data)
 
 def main_gui():
-    global textures_id    
+    global cap
 
     # Obtener las dimensiones de la pantalla usando Tkinter
     root = tk.Tk()
@@ -53,30 +48,44 @@ def main_gui():
     
     dpg.create_viewport(title="Cheese", width=screen_width, height=screen_height)
 
-    textures_id.append({"id": che.create_dynamic_texture("camera_texture", 1280, 720), "width": 1280, "height": 720})
+    che.register_texture("camera_texture", 1280, 720, None)
     
+
     # Ventana para mostrar la cámara
     with dpg.window(label="Vista de Cámara", width=screen_width - 600, height=screen_height, no_close=True,
                     no_move=True, no_resize=True, no_title_bar=False, no_background=False, no_collapse=False,
                     no_scrollbar=True, pos=[0, 0], no_bring_to_front_on_focus=True):
-        dpg.add_image(textures_id[0]["id"])
+        dpg.add_image(che.get_texture("camera_texture")["id"])
 
     # Ventana de opciones
     with dpg.window(label="Opciones", width=600, height=screen_height, no_close=True, no_move=True,
                     no_resize=True, no_title_bar=True, no_background=False, no_collapse=True,
                     no_scrollbar=False, pos=[screen_width - 600, 0]):
-        dpg.add_text("Ajustes de la cámara")
-        dpg.add_slider_float(label="Brillo", default_value=1.0, min_value=0.0, max_value=2.0, tag="Brillo")
-        dpg.add_slider_float(label="Contraste", default_value=1.0, min_value=0.0, max_value=2.0, tag="Contraste")
-        dpg.add_slider_float(label="Saturación", default_value=1.0, min_value=0.0, max_value=2.0, tag="Saturación")
-        dpg.add_text("Ajustes de la cámara")
+        
+        dpg.add_text("Guardar ROI")
+        dpg.add_button(label="Capturar", callback=che.save_roi_coords, tag="capture_button")
+        dpg.add_button(label="Guardar", callback=che.save_roi_coords, tag="save_button")
+        #mostrar informacion de las coordenadas de la roi
+        dpg.add_text("Coordenadas de la ROI")
+        #mostrar infomacion no con add_text sino con add_input_text
+        
+        dpg.add_input_text(label="x1", default_value="0", tag="x1")        
+        dpg.add_input_text(label="y1", default_value="0", tag="y1")
+        dpg.add_input_text(label="x2", default_value="0", tag="x2")
+        dpg.add_input_text(label="y2", default_value="0", tag="y2")
+
+
+        dpg.add_text("Texturas")
+        dpg.add_listbox(label="Texturas", items=["camera_texture"], num_items=5, callback=select_texture, tag="listbox_id")
+
+
 
     # Configurar los eventos del mouse
     with dpg.handler_registry():
-        dpg.add_mouse_release_handler(callback=mouse_release_callback)
-        dpg.add_mouse_click_handler(callback=mouse_press_callback)
-        dpg.add_mouse_drag_handler(callback=draw_rectangle_mouse_callback)
-        
+        dpg.add_mouse_release_handler(callback=che.mouse_release_callback)
+        dpg.add_mouse_click_handler(callback=che.mouse_press_callback)
+        dpg.add_mouse_drag_handler(callback=che.mouse_drag_callback)
+
     dpg.setup_dearpygui()
     dpg.show_viewport()
 
