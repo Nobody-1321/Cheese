@@ -3,10 +3,12 @@ import numpy as np
 import cheese as che
 
 # Cargar la imagen del tablero
-#imagen = cv2.imread('img/tabla.jpg')
-imagen = cv2.imread('imgtemp/tablaR.jpg')
+imagen = cv2.imread('img/tabla.jpg')
+#imagen = cv2.imread('img/tabla2.jpg')
 
-imagen= cv2.resize(imagen, (0, 0), fx=0.8, fy=0.8)
+#imagen = cv2.imread('imgtemp/tablaR.jpg')
+
+#imagen= cv2.resize(imagen, (0, 0), fx=0.8, fy=0.8)
 
 # Detectar intersecciones
 imagen_procesada, puntos_interseccion = che.encontrar_intersecciones_con_shi_tomasi(imagen)

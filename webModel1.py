@@ -41,6 +41,11 @@ while True:
                 if che.distancia(linea[0], linea_f[0]) < 50 and abs(theta - linea_f[0][1]) < 0.1:
                     agregar = False
                     break
+            
+            for linea_f in lineas_filtradas:
+                if che.distancia(linea[0], linea_f[0]) < 50 and abs(theta - linea_f[0][1]) < 0.1:
+                    agregar = False
+                    break
 
             if agregar:
                 lineas_filtradas.append(linea)
