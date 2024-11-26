@@ -104,7 +104,6 @@ def draw_roi(image, roi_coords, color, thickness):
 
     return image
     
-
 def save_image(path, image):
     if image.shape[0] > 0 and image.shape[1] > 0 and image.shape[2] == 3:
         cv.imwrite(path, image)

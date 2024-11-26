@@ -14,8 +14,6 @@ x_pos = 0
 y_pos = 0
 
 
-
-
 def create_dynamic_texture(tag, width, height):
     with dpg.texture_registry():
         dpg.add_dynamic_texture(
