@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.cluster import DBSCAN 
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 
@@ -14,6 +14,24 @@ def classify_polar_lines(lines, angle_threshold):
             elif abs(theta - np.pi/2) < angle_threshold:
                 vertical_lines.append(line)
     return vertical_lines, horizontal_lines
+
+def classify_vertical_lines(lines, angle_threshold):
+    horizontal_lines = []
+
+    for line in lines:
+        for rho, theta in line:
+            if abs(theta - 0) < angle_threshold or abs(theta - np.pi) < angle_threshold:
+                horizontal_lines.append(line)
+    return horizontal_lines
+
+def classify_horizontal_lines(lines, angle_threshold):
+    vertical_lines = []
+
+    for line in lines:
+        for rho, theta in line:
+            if abs(theta - np.pi/2) < angle_threshold:
+                vertical_lines.append(line)
+    return vertical_lines
 
 def line_distance(line1, line2):
     rtho1, theta1 = line1
@@ -151,74 +169,118 @@ def point_into_cell(point, cell):
         return True
     return False
 
+def degree_to_radian(degree):
+    return degree * np.pi / 180
+
+def radian_to_degree(radian):
+    return radian * 180 / np.pi
+
 def middle_point_line(line):
     x1, y1, x2, y2 = line
     return (x1 + x2) // 2, (y1 + y2) // 2
 
-def cluster_and_average_lines(lines, distance_threshold, angle_threshold):
-    """
-    Agrupa líneas cercanas usando DBSCAN y promedia las líneas en cada cluster.
+def cluster_and_lines(lines, n_clusters):
+    middle_points = [middle_point_line(line) for line in lines]
+    X = np.array(middle_points)
     
-    Args:
-        lines (list): Lista de líneas en formato [(rho, theta)].
-        distance_threshold (float): Máxima distancia para considerar líneas cercanas (rho).
-        angle_threshold (float): Máxima diferencia de ángulo (en radianes) para agrupar líneas.
+    # Aplicar K-Means con el número especificado de clusters
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X)
     
-    Returns:
-        list: Lista de líneas promediadas después de agruparlas.
-    """
+    labels = kmeans.labels_
+    centroids = kmeans.cluster_centers_
     
-    #lines = np.array(lines)
+    print('Number of clusters: %d' % n_clusters)
+    colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, n_clusters)]
     
-    # Convertir las líneas a una matriz para DBSCAN
-    lines_array = []
-    for line in lines:
-        rho, theta = line[0]
-        lines_array.append([rho, theta])
-        print(rho)
-    
-    lines_array = np.array(lines_array)
-    
-    if lines_array.ndim != 2 or lines_array.shape[1] != 2:
-        raise ValueError("Expected 2D array with shape (n_samples, 2)")
-
-    # Ajustar los parámetros de DBSCAN
-    eps = np.sqrt(distance_threshold**2 + angle_threshold**2)  # Radio de agrupamiento
-    clustering = DBSCAN(eps=eps, min_samples=1).fit(lines_array)
-    
-    
-    # Agrupar y promediar líneas
-    averaged_lines = []
-    for cluster_id in np.unique(clustering.labels_):
-        # Filtrar líneas del cluster actual
-        cluster_lines = lines_array[clustering.labels_ == cluster_id]
+    for i in range(n_clusters):
+        color = colors[i]
+        cluster = X[labels == i]
+        for x, y in cluster:
+            plt.scatter(x, y, color=color)
         
-        # Calcular el promedio de rho y theta
-        avg_rho = np.mean(cluster_lines[:, 0])
-        avg_theta = np.mean(cluster_lines[:, 1])
-        
-        # Agregar línea promedio a la lista
-        averaged_lines.append((avg_rho, avg_theta))
-    #para de array numpy a lista
-    for i in range(len(averaged_lines)):
-        print(averaged_lines[i])
-
-    #mostrar las lineas promediadas con matplot 
-    plt.figure()
-    ax = plt.gca()
-    for line in averaged_lines:
-        rho, theta = line
-        a = np.cos(theta)
-        b = np.sin(theta)
-        x0 = a * rho
-        y0 = b * rho
-        x1 = int(x0 + 1000 * (-b))
-        y1 = int(y0 + 1000 * (a))
-        x2 = int(x0 - 1000 * (-b))
-        y2 = int(y0 - 1000 * (a))
-        ax.plot([x1, x2], [y1, y2], 'r')
-
-    plt.show()
+        # Dibujar el centroide del cluster
+        centroid = centroids[i]
+        plt.scatter(centroid[0], centroid[1], color='black', marker='x', s=100, label=f'Centroid {i+1}')
     
+    plt.legend()
+    plt.show()  
 
-    return  averaged_lines
+    return kmeans
+
+
+def cluster_and_lines_1(lines, n_clusters):
+    middle_points = [middle_point_line(line) for line in lines]
+    X = np.array(middle_points)
+    
+    # Aplicar K-Means con el número especificado de clusters
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X)
+    
+    labels = kmeans.labels_
+    centroids = kmeans.cluster_centers_
+    
+    print('Number of clusters: %d' % n_clusters)
+    colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, n_clusters)]
+    
+    for i in range(n_clusters):
+        color = colors[i]
+        cluster = X[labels == i]
+        
+        # Imprimir el cluster y los puntos que pertenecen a él
+        print(f'Cluster {i+1}:')
+        for x, y in cluster:
+            print(f'Point: ({x}, {y})')
+            plt.scatter(x, y, color=color)
+        
+        # Dibujar el centroide del cluster
+        centroid = centroids[i]
+        plt.scatter(centroid[0], centroid[1], color='black', marker='x', s=100, label=f'Centroid {i+1}')
+    
+    plt.legend()
+    plt.show()  
+    
+    return kmeans
+
+def cluster_and_lines_2(lines, n_clusters):
+    middle_points = [middle_point_line(line) for line in lines]
+    X = np.array(middle_points)
+    
+    # Aplicar K-Means con el número especificado de clusters
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X)
+    
+    labels = kmeans.labels_
+    centroids = kmeans.cluster_centers_
+    
+    print('Number of clusters: %d' % n_clusters)
+    colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, n_clusters)]
+    
+    representative_lines = []
+    
+    for i in range(n_clusters):
+        color = colors[i]
+        cluster = X[labels == i]
+        
+        # Imprimir el cluster y los puntos que pertenecen a él
+        print(f'Cluster {i+1}:')
+        for x, y in cluster:
+            print(f'Point: ({x}, {y})')
+            plt.scatter(x, y, color=color)
+        
+        # Dibujar el centroide del cluster
+        centroid = centroids[i]
+        plt.scatter(centroid[0], centroid[1], color='black', marker='x', s=100, label=f'Centroid {i+1}')
+        
+        # Encontrar la línea más cercana al centroide
+        distances = [np.linalg.norm(np.array(middle_point_line(line)) - centroid) for line in lines]
+        closest_line_index = np.argmin(distances)
+        representative_lines.append(lines[closest_line_index])
+    
+    plt.legend()
+    plt.show()  
+
+    print("ssssssssssssssssssssssssss")
+    for line in representative_lines:
+        print(line)
+    
+    representative_lines = [list(line) for line in representative_lines]
+
+    return representative_lines

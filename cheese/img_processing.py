@@ -1,7 +1,6 @@
 import cv2 as cv
 import numpy as np
 
-
 def open_image(path):
     return cv.imread(path)
 
@@ -109,8 +108,13 @@ def save_image(path, image):
         cv.imwrite(path, image)
     else:
         print("No se pudo guardar la imagen")
-        
-        
+          
+def extract_roi(image, roi_coords):
+    x1, y1, x2, y2 = map(int, [roi_coords["x1"], roi_coords["y1"], roi_coords["x2"], roi_coords["y2"]])
+    return image[min(y1, y2):max(y1, y2), min(x1, x2):max(x1, x2)]
 
 
-    
+def extract_cell(image, cell):
+    x1, y1 = cell[0]
+    x3, y3 = cell[2]
+    return image[y1:y3, x1:x3]
