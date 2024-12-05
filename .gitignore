@@ -1,3 +1,5 @@
 imgtemp/*
 cheese/__pycache__/*
 *.png
+dataset_chess
+*.txt

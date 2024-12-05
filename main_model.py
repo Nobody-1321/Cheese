@@ -6,9 +6,10 @@ def main():
     #image = che.open_image('imgtemp/tablaR2.jpg')
     #image = che.open_image('img/tabla2.jpg')
     #image = che.open_image('img/tablaRea.jpg')
-    #image = che.open_image('img/tablaRea1.jpg')
+    image = che.open_image('img/tabla2.jpg')
     #image = che.open_image('img/tablaRea2.jpg')
-    image = che.open_image('img/tableroA.png')
+    #image = che.open_image('img/tableroA.png')
+    #image = che.open_image('roi.png')
     #redimensionar a 560 560    
     image = cv.resize(image, (560, 560))
 
@@ -21,40 +22,31 @@ def main():
     che.show_image_wait('edges', edeges)
 
     lines = che.detect_lines(edeges, 1, che.np.pi/180, 120, 0, che.np.pi)
-    
-    horizontal_lines = che.classify_horizontal_lines(lines, che.degree_to_radian(20))
-    vertical_lines = che.classify_vertical_lines(lines, che.np.pi/4)
 
-    print(len(horizontal_lines))
-    print(len(vertical_lines))
+    horizontal_lines = che.classify_horizontal_lines(lines, che.degree_to_radian(20))    
+    vertical_lines = che.classify_vertical_lines(lines, che.degree_to_radian(20))
 
-    #exit()
-    
-    #vertical_lines = che.filter_close_lines(vertical_lines, 60, che.np.pi/4)
-    #horizontal_lines = che.filter_close_lines(horizontal_lines, 60, che.np.pi/4)
-    
+
     height, width = image.shape[:2]
     max_length = int(che.np.hypot(width, height))
 
-    cartesian_vertical_lines = [che.polar_to_cartesian(line, max_length) for line in vertical_lines]
-    cartesian_horizontal_lines = [che.polar_to_cartesian(line, max_length) for line in horizontal_lines]
-
-    cartesian_vertical_lines = che.cluster_and_lines_2(cartesian_vertical_lines, 9)
-    cartesian_horizontal_lines = che.cluster_and_lines_2(cartesian_horizontal_lines, 9)
-
-    print(len(cartesian_vertical_lines))
-    print(len(cartesian_horizontal_lines))
+    # Convertir las listas a arreglos de numpy
+    cartesian_vertical_lines = np.array([che.polar_to_cartesian(line, max_length) for line in vertical_lines])
+    cartesian_horizontal_lines = np.array([che.polar_to_cartesian(line, max_length) for line in horizontal_lines])
+    
+    cartesian_vertical_lines = che.cluster_and_lines(cartesian_vertical_lines, 9)    
+    cartesian_horizontal_lines = che.cluster_and_lines(cartesian_horizontal_lines, 9)
 
     assert len(cartesian_vertical_lines) == 9
     assert len(cartesian_horizontal_lines) == 9
 
     for line in cartesian_vertical_lines:
         image = che.draw_line(image, line, (0, 0, 255), 2)
-        che.show_image_wait_time('lines', image, 1000)
+#        che.show_image_wait_time('lines', image, 1000)
 
     for line in cartesian_horizontal_lines:
         image = che.draw_line(image, line, (0, 0, 255), 2)
-        che.show_image_wait_time('lines', image, 1000)
+#        che.show_image_wait_time('lines', image, 1000)
 
     che.show_image_wait('lines', image)
 
@@ -64,18 +56,16 @@ def main():
         for horizontal_line in cartesian_horizontal_lines:
             intersection_points.append(che.intersection_point(vertical_line, horizontal_line))
 
-    print(len(intersection_points))
-
     intersection_points = [point for point in intersection_points if point is not None]
+
+    intersection_points = np.array(intersection_points)
     intersection_points = che.sort_points(intersection_points)
 
-    intersection_points = che.filter_close_points(intersection_points, 30) 
-
-    print(len(intersection_points))
+    assert len(intersection_points) == 81
 
     i=0
     for point in intersection_points:
-        imgae = che.draw_text(image, str(i), point, 0.5, (255, 0, 0), 2)
+        image = che.draw_text(image, str(i), point, 0.5, (255, 0, 0), 2)
         che.show_image_wait_time('points', image, 900)
         i+=1
 
@@ -115,8 +105,12 @@ def main():
     che.show_image_wait('points', image)
     
     print(image.shape)
-    chess_cells = che.coordinate_cells(cells, True)
+    chess_cells = che.chess_coordinate_cells(cells,True)
     
+    with open('chess_table_cells.txt', 'w') as file:
+        for cell in chess_cells:
+            file.write(str(cell) + str(chess_cells[cell]) + '\n')
+
     for chess_cell in chess_cells:
         print(chess_cell, chess_cells[chess_cell])
     

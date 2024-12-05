@@ -16,22 +16,22 @@ def classify_polar_lines(lines, angle_threshold):
     return vertical_lines, horizontal_lines
 
 def classify_vertical_lines(lines, angle_threshold):
-    horizontal_lines = []
+    
+    thetas = lines[:, 0, 1]
+    mask = np.abs(thetas) < angle_threshold
+    classify_vertical_lines = lines[mask]
 
-    for line in lines:
-        for rho, theta in line:
-            if abs(theta - 0) < angle_threshold or abs(theta - np.pi) < angle_threshold:
-                horizontal_lines.append(line)
-    return horizontal_lines
+    return classify_vertical_lines
 
 def classify_horizontal_lines(lines, angle_threshold):
-    vertical_lines = []
+    
+    thetas = lines[:, 0, 1]
+    mask = np.abs(thetas - np.pi/2) < angle_threshold
 
-    for line in lines:
-        for rho, theta in line:
-            if abs(theta - np.pi/2) < angle_threshold:
-                vertical_lines.append(line)
-    return vertical_lines
+    classify_horizontal_lines = lines[mask]
+
+    return classify_horizontal_lines
+
 
 def line_distance(line1, line2):
     rtho1, theta1 = line1
@@ -57,6 +57,7 @@ def filter_close_lines(lines, distance_threshold, angle_threshold):
 
     return filtered_lines
 
+
 def polar_to_cartesian(line, max_length):
     rho, theta = line[0]
     a = np.cos(theta)
@@ -80,6 +81,7 @@ def intersection_point(line1, line2):
         y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / det
         return (int(x), int(y))
     else:
+        print("No intersection point")
         return None
     
 '''
@@ -123,7 +125,7 @@ def filter_close_points(points, distance_threshold):
 
 def sort_points(points):
     points_sorted_x = sorted(points, key=lambda point: (point[1], point[0]))
-
+    
     sorted_intersection_points = []
 
     for i in range(0, len(points_sorted_x), 9):
@@ -192,95 +194,17 @@ def cluster_and_lines(lines, n_clusters):
     print('Number of clusters: %d' % n_clusters)
     colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, n_clusters)]
     
-    for i in range(n_clusters):
-        color = colors[i]
-        cluster = X[labels == i]
-        for x, y in cluster:
-            plt.scatter(x, y, color=color)
-        
-        # Dibujar el centroide del cluster
-        centroid = centroids[i]
-        plt.scatter(centroid[0], centroid[1], color='black', marker='x', s=100, label=f'Centroid {i+1}')
-    
-    plt.legend()
-    plt.show()  
-
-    return kmeans
-
-
-def cluster_and_lines_1(lines, n_clusters):
-    middle_points = [middle_point_line(line) for line in lines]
-    X = np.array(middle_points)
-    
-    # Aplicar K-Means con el número especificado de clusters
-    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X)
-    
-    labels = kmeans.labels_
-    centroids = kmeans.cluster_centers_
-    
-    print('Number of clusters: %d' % n_clusters)
-    colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, n_clusters)]
-    
-    for i in range(n_clusters):
-        color = colors[i]
-        cluster = X[labels == i]
-        
-        # Imprimir el cluster y los puntos que pertenecen a él
-        print(f'Cluster {i+1}:')
-        for x, y in cluster:
-            print(f'Point: ({x}, {y})')
-            plt.scatter(x, y, color=color)
-        
-        # Dibujar el centroide del cluster
-        centroid = centroids[i]
-        plt.scatter(centroid[0], centroid[1], color='black', marker='x', s=100, label=f'Centroid {i+1}')
-    
-    plt.legend()
-    plt.show()  
-    
-    return kmeans
-
-def cluster_and_lines_2(lines, n_clusters):
-    middle_points = [middle_point_line(line) for line in lines]
-    X = np.array(middle_points)
-    
-    # Aplicar K-Means con el número especificado de clusters
-    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(X)
-    
-    labels = kmeans.labels_
-    centroids = kmeans.cluster_centers_
-    
-    print('Number of clusters: %d' % n_clusters)
-    colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, n_clusters)]
-    
     representative_lines = []
     
     for i in range(n_clusters):
-        color = colors[i]
-        cluster = X[labels == i]
-        
-        # Imprimir el cluster y los puntos que pertenecen a él
-        print(f'Cluster {i+1}:')
-        for x, y in cluster:
-            print(f'Point: ({x}, {y})')
-            plt.scatter(x, y, color=color)
-        
-        # Dibujar el centroide del cluster
         centroid = centroids[i]
-        plt.scatter(centroid[0], centroid[1], color='black', marker='x', s=100, label=f'Centroid {i+1}')
         
         # Encontrar la línea más cercana al centroide
         distances = [np.linalg.norm(np.array(middle_point_line(line)) - centroid) for line in lines]
         closest_line_index = np.argmin(distances)
         representative_lines.append(lines[closest_line_index])
     
-    plt.legend()
-    plt.show()  
-
-    print("ssssssssssssssssssssssssss")
-    for line in representative_lines:
-        print(line)
     
-    representative_lines = [list(line) for line in representative_lines]
-
+    #representative_lines = [list(line) for line in representative_lines]
+    representative_lines = np.array(representative_lines)
     return representative_lines
