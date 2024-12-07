@@ -1,9 +1,7 @@
 import cheese as che
 import numpy as np
-import time
 import cv2 
-
-
+from tensorflow.keras import models # type: ignore
 
 roi_coords = {"x1": 0, "y1": 0, "x2": 0, "y2": 0}
 drawing = False  # Indica si el usuario está dibujando el rectángulo
@@ -37,7 +35,7 @@ def get_roi_coords():
 
     print('Getting chess table...')
 
-    cap = che.capture_video(0, 1280, 720, 30)
+    cap = che.capture_video(2, 640, 480, 30)
     
     if not cap.isOpened():
         print("Error: No se puede abrir la cámara")
@@ -177,10 +175,10 @@ def get_roi_coords_from_file():
         coords = eval(coords)
     return coords
 
-def get_chess_cells_coords_from_file():
+def get_chess_cells_coords_from_file(path):
     coordinatess = {}
 
-    with open('chess_cells.txt', 'r') as file:
+    with open(path, 'r') as file:
         for line in file:
            # El primer paso es extraer el nombre (a8, b8, etc.) y las coordenadas
             line = line.strip()  # Eliminar espacios y saltos de línea innecesarios
@@ -210,39 +208,47 @@ def get_chess_cells_coords_from_file():
 
 def cheese_main():
     global index, k,l
-
+    
+    model = models.load_model('chess_model.h5')
+    image_chess = cv2.imread('img/tabla2.jpg')
+    image_chess = cv2.resize(image_chess, (560, 560))
+    
     #coordinates = get_roi_coords()
     coordinates = get_roi_coords_from_file()
-    chess_cells = get_chess_cells_coords_from_file()
-    all_chess_cells = che.all_chess_coordinates()    
-    #time_to_wait = 10
-    cap = che.capture_video(0, 1280, 720, 30)
+    chess_cells = get_chess_cells_coords_from_file('chess_cells.txt')
+    all_chess_cells = che.all_chess_coordinates()
+    chess_cells_normalized = {key.split('[array')[0]: value for key, value in chess_cells.items()}   
+
+    cap = che.capture_video(2, 640, 480, 30)
     ret, frame = cap.read()
-    k = 17
-    l = 74
+
     while True:
         ret, frame = cap.read()
-
         if not ret:
             print("Error: No se puede recibir frame (stream end?). Saliendo ...")
             break
 
-
         roi = che.extract_roi(frame, coordinates)
         roi = che.resize_image(roi, 560, 560)        
         che.show_image_wait_time('roi', roi, 1)    
-        
 
-        cell = che.extract_chess_cell(roi, chess_cells, all_chess_cells[k])
-        cell = che.resize_image(cell, 85, 85)
-        che.save_image(f'dataset_chess/c__{l}.png', cell)
-        print(f'Image {l} saved')
-        k+=1
-        l+=1
-        
-        if l == 76:
-            exit()
+        for i in range(63):
+            cell = chess_cells_normalized[all_chess_cells[i]]
+            point1 = cell[0]
+            point2 = cell[2]
 
+            middle_point = che.middle_point(point1, point2)
+            cell_img = che.extract_chess_cell(roi, chess_cells, all_chess_cells[i])
+            cell_img = che.resize_image(cell_img, 85, 85)
+            cell_img = np.expand_dims(cell_img, axis=0)
+            cell_img = cell_img/255
+            prediction = model.predict(cell_img)
+            prediction = np.argmax(prediction)
+           
+            if prediction == 1:
+                che.draw_text(image_chess, 'P',middle_point , 0.5, (0, 0, 255), 2)
+
+        che.show_image_wait_time('chess', image_chess, 1)
         key = cv2.waitKey(1)
         if key == ord('q'):
             break        

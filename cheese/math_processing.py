@@ -181,6 +181,11 @@ def middle_point_line(line):
     x1, y1, x2, y2 = line
     return (x1 + x2) // 2, (y1 + y2) // 2
 
+def middle_point(point1, point2):
+    x1, y1 = point1
+    x2, y2 = point2
+    return (x1 + x2) // 2, (y1 + y2) // 2
+
 def cluster_and_lines(lines, n_clusters):
     middle_points = [middle_point_line(line) for line in lines]
     X = np.array(middle_points)

@@ -11,9 +11,9 @@ def main():
 
     data_dir = './dataset_chess/'
     object_labels = [0, 1, 2]
-    images_v = [f'{data_dir}v__{j}.png' for j in range(0, 75)]
-    images_c = [f'{data_dir}c__{j}.png' for j in range(0, 75)]
-    images_p = [f'{data_dir}p__{j}.png' for j in range(0, 75)]
+    images_v = [f'{data_dir}v__{j}.png' for j in range(0, 190)]
+    images_p = [f'{data_dir}p__{j}.png' for j in range(0, 190)]
+    #images_p = [f'{data_dir}c__{j}.png' for j in range(0, 75)]
 
     dataset_info = []  # Lista para guardar información completa de cada imagen
     features = []
@@ -28,17 +28,11 @@ def main():
         features.append(img)
         labels.append(object_labels[0])
 
-        img = cv2.imread(images_c[i])
-        img = img/255
-        mat_images.append(img)
-        features.append(img)
-        labels.append(object_labels[1])
-
         img = cv2.imread(images_p[i])
         img = img/255
         mat_images.append(img)
         features.append(img)
-        labels.append(object_labels[2])
+        labels.append(object_labels[1])
 
     features = np.array(features)
     labels = np.array(labels)
@@ -70,7 +64,7 @@ def main():
 # Aplanar y conectar a una capa densa
     model.add(layers.Flatten())
     model.add(layers.Dense(64, activation='relu'))  # Capa oculta
-    model.add(layers.Dense(3, activation='softmax'))  # Capa de salida (3 clases)
+    model.add(layers.Dense(2, activation='softmax'))  # Capa de salida (3 clases)
 
 # Resumen del modelo
     model.summary()
@@ -81,7 +75,7 @@ def main():
     metrics=['accuracy']  # Métrica principal
     )
 
-    model.fit(X_train, y_train, epochs=200, batch_size=3, validation_data=(X_test, y_test))
+    model.fit(X_train, y_train, epochs=50, batch_size=3, validation_data=(X_test, y_test))
 
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
     print(f"Precisión en el conjunto de prueba: {test_acc * 100:.2f}%")
@@ -91,7 +85,7 @@ def main():
     print('Modelo guardado')
 
     model = models.load_model('chess_model.h5')
-    imagen = cv2.imread("dataset_chess/c__62.png")
+    imagen = cv2.imread("dataset_chess/p__62.png")
     imagen = cv2.resize(imagen, (85, 85))
     imagen = np.expand_dims(img, axis=0)
     print(imagen.shape)
