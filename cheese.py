@@ -35,7 +35,7 @@ def get_roi_coords():
 
     print('Getting chess table...')
 
-    cap = che.capture_video(2, 640, 480, 30)
+    cap = che.capture_video(2, 1280, 720, 30)
     
     if not cap.isOpened():
         print("Error: No se puede abrir la cámara")
@@ -66,13 +66,13 @@ def get_roi_coords():
             roi = che.extract_roi(frame, roi_coords)
             che.save_image('chess_table.png', roi)
             image = che.open_image('chess_table.png')
-            image = che.resize_image(image, 560, 560)
+            image = che.resize_image(image, 720, 720)
             
             image = che.denoise(image, 9)
             
 
             image_ = che.convert_to_gray(image) 
-            image_ = che.detect_edges(image_, 1, 130, 3)
+            image_ = che.detect_edges(image_, 1, 110, 3)
             che.show_image_wait('edges', image_)
             lines = che.detect_lines(image_, 1, che.np.pi/180, 100, 0, che.np.pi)
             copy_image = image.copy()
@@ -88,7 +88,7 @@ def get_roi_coords():
             height, width = image.shape[:2]
             max_length = int(che.np.hypot(width, height))
 
-            horizontal_lines = che.filter_close_lines(horizontal_lines, 30, che.np.pi/4)
+            horizontal_lines = che.filter_close_lines(horizontal_lines, 30, che.degree_to_radian(20))
             vertical_lines = che.filter_close_lines(vertical_lines, 30, che.np.pi/4)
             
             print(len(horizontal_lines))
@@ -207,51 +207,83 @@ def get_chess_cells_coords_from_file(path):
     return coordinatess
 
 def cheese_main():
-    global index, k,l
-    
     model = models.load_model('chess_model.h5')
+
+    # Cargar la imagen de fondo del tablero
     image_chess = cv2.imread('img/tabla2.jpg')
-    image_chess = cv2.resize(image_chess, (560, 560))
-    
-    #coordinates = get_roi_coords()
+    image_chess = cv2.resize(image_chess, (720, 720))
+
+    coordinates = get_roi_coords()
     coordinates = get_roi_coords_from_file()
     chess_cells = get_chess_cells_coords_from_file('chess_cells.txt')
     all_chess_cells = che.all_chess_coordinates()
-    chess_cells_normalized = {key.split('[array')[0]: value for key, value in chess_cells.items()}   
+    chess_cells_normalized = {key.split('[array')[0]: value for key, value in chess_cells.items()}
 
-    cap = che.capture_video(2, 640, 480, 30)
-    ret, frame = cap.read()
+    # Configurar la captura de video
+    cap = che.capture_video(2, 1280, 720, 24)
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("Error: No se puede recibir frame (stream end?). Saliendo ...")
-            break
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print("Error: No se puede recibir frame (stream end?). Saliendo ...")
+                break
 
-        roi = che.extract_roi(frame, coordinates)
-        roi = che.resize_image(roi, 560, 560)        
-        che.show_image_wait_time('roi', roi, 1)    
+            # Procesar región de interés (ROI)
+            roi = che.extract_roi(frame, coordinates)
+            roi = che.resize_image(roi, 720, 720)
+            che.show_image_wait_time('roi', roi, 1)
 
-        for i in range(63):
-            cell = chess_cells_normalized[all_chess_cells[i]]
-            point1 = cell[0]
-            point2 = cell[2]
+            # Crear copia de la imagen para anotaciones
+            annotated_image = image_chess.copy()
 
-            middle_point = che.middle_point(point1, point2)
-            cell_img = che.extract_chess_cell(roi, chess_cells, all_chess_cells[i])
-            cell_img = che.resize_image(cell_img, 85, 85)
-            cell_img = np.expand_dims(cell_img, axis=0)
-            cell_img = cell_img/255
-            prediction = model.predict(cell_img)
-            prediction = np.argmax(prediction)
-           
-            if prediction == 1:
-                che.draw_text(image_chess, 'P',middle_point , 0.5, (0, 0, 255), 2)
+            # Procesar cada celda del tablero
+            cells_images = []
+            cells_middle_points = []
 
-        che.show_image_wait_time('chess', image_chess, 1)
-        key = cv2.waitKey(1)
-        if key == ord('q'):
-            break        
+            for i in range(63):
+                cell = chess_cells_normalized[all_chess_cells[i]]
+                point1 = cell[0]
+                point2 = cell[2]
+
+                middle_point = che.middle_point(point1, point2)
+                cell_img = che.extract_chess_cell(roi, chess_cells, all_chess_cells[i])
+                cell_img = che.resize_image(cell_img, 200, 200)
+                cell_img = cell_img / 255.0
+
+                cells_images.append(cell_img)
+                cells_middle_points.append(middle_point)
+
+            # Convertir las imágenes de las celdas a un array de batch
+            cells_images = np.array(cells_images)
+            predictions = model.predict(cells_images)
+            predictions = np.argmax(predictions, axis=1)
+        
+
+
+            # Anotar predicciones
+            for idx, prediction in enumerate(predictions):
+                if prediction == 0:
+                    che.draw_text(annotated_image, 'V', cells_middle_points[idx], 0.5, (0, 0, 255), 2)
+                if prediction == 1:  # Cambiar esta condición si hay más clases
+                    che.draw_text(annotated_image, 'P', cells_middle_points[idx], 0.5, (0, 0, 255), 2)
+                if prediction == 2:
+                    che.draw_text(annotated_image, 'C', cells_middle_points[idx], 0.5, (0, 0, 255), 2)
+                if prediction == 3:
+                    che.draw_text(annotated_image, 'T', cells_middle_points[idx], 0.5, (0, 0, 255), 2)
+
+            # Mostrar la imagen anotada
+            che.show_image_wait_time('chess', annotated_image, 1)
+
+            # Salir si se presiona 'q'
+            key = cv2.waitKey(1)
+            if key == ord('q'):
+                break
+
+    finally:
+        # Liberar recursos
+        cap.release()
+        cv2.destroyAllWindows()
         
 if __name__ == '__main__':
     cheese_main()
