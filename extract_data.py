@@ -219,9 +219,9 @@ def cheese_main():
     # Configurar la captura de video
     cap = che.capture_video(2, 1280, 720, 24)
     
-    pb = 154
+    pb = 471
     pn = 0
-    cv = 171
+    cv = 475
     k = 0
 
     try:

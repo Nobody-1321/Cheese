@@ -207,7 +207,7 @@ def get_chess_cells_coords_from_file(path):
     return coordinatess
 
 def cheese_main():
-#    model = models.load_model('chess_model.h5')
+    model = models.load_model('chess_model.keras')
 
     # Cargar la imagen de fondo del tablero
     image_chess = cv2.imread('img/tabla2.jpg')
@@ -241,7 +241,7 @@ def cheese_main():
             cells_images = []
             cells_middle_points = []
 
-            for i in range(63):
+            for i in range(64):
                 cell = chess_cells_normalized[all_chess_cells[i]]
                 point1 = cell[0]
                 point2 = cell[2]
