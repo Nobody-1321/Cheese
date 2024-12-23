@@ -84,30 +84,6 @@ def intersection_point(line1, line2):
         print("No intersection point")
         return None
     
-'''
-def intersection_point(line1, line2):
-    rho1, theta1 = line1
-    rho2, theta2 = line2
-
-    A1 = np.cos(theta1)
-    B1 = np.sin(theta1)
-    C1 = rho1
-
-    A2 = np.cos(theta2)
-    B2 = np.sin(theta2)
-    C2 = rho2
-
-    det = A1 * B2 - A2 * B1
-    dx = C1 * B2 - C2 * B1
-    dy = A1 * C2 - A2 * C1
-
-    if det != 0:
-        x = dx / det
-        y = dy / det
-        return (int(x), int(y))
-    else:
-        return None
-'''
 
 def filter_close_points(points, distance_threshold):
     filtered_points = []

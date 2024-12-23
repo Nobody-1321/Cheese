@@ -1,7 +1,6 @@
 import cheese as che
 import numpy as np
 import cv2
-from tensorflow.keras import models # type: ignore
 
 roi_coords = {"x1": 0, "y1": 0, "x2": 0, "y2": 0}
 drawing = False  # Indica si el usuario está dibujando el rectángulo
@@ -210,7 +209,7 @@ def get_chess_cells_coords_from_file(path):
 
 def cheese_main():
 
-    model = models.load_model('chess_model_F.h5')
+    #model = models.load_model('chess_model_F.h5')
     #coordinates = get_roi_coords()
     coordinates = get_roi_coords_from_file()
     chess_cells = get_chess_cells_coords_from_file('chess_cells.txt')
@@ -220,12 +219,11 @@ def cheese_main():
     # Configurar la captura de video
     cap = che.capture_video(2, 1280, 720, 24)
     
-    t = 231
-    c = 301
-    p = 280
-    a = 48
-    v = 262
+    pb = 154
+    pn = 0
+    cv = 171
     k = 0
+
     try:
         while True:
             ret, frame = cap.read()
@@ -244,28 +242,19 @@ def cheese_main():
             cv2.imshow('cell', cell)
             key = cv2.waitKey(0)            
 
-            if key == ord('t'):
-                cv2.imwrite(f'./dataset_cheesee/tb__{t}.png', cell)
-                t+=1
-
-            elif key == ord('c'):
-                cv2.imwrite(f'./dataset_cheesee/cb__{c}.png', cell)
-                c+=1
-
-
-            elif key == ord('p'):
-                cv2.imwrite(f'./dataset_cheesee/pb__{p}.png', cell)
-                p+=1
-
-            elif key == ord('a'):
-                cv2.imwrite(f'./dataset_cheesee/ab__{a}.png', cell)
-                a+=1
-            
-            elif key == ord('v'):
-                cv2.imwrite(f'./dataset_cheesee/v__{v}.png', cell)
-                v+=1
+            if key == ord('b'):
+                cv2.imwrite(f'./dataset_cheese/pb__{pb}.png', cell)
+                pb+=1
 
             elif key == ord('n'):
+                cv2.imwrite(f'./dataset_cheese/pn__{pn}.png', cell)
+                pn+=1
+                
+            elif key == ord('v'):
+                cv2.imwrite(f'./dataset_cheese/cv__{cv}.png', cell)
+                cv+=1
+
+            elif key == ord('p'):
                 print("nada")
 
             if key == ord('q'):

@@ -207,7 +207,7 @@ def get_chess_cells_coords_from_file(path):
     return coordinatess
 
 def cheese_main():
-    model = models.load_model('chess_model.h5')
+#    model = models.load_model('chess_model.h5')
 
     # Cargar la imagen de fondo del tablero
     image_chess = cv2.imread('img/tabla2.jpg')

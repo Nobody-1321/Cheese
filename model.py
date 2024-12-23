@@ -13,18 +13,16 @@ def main():
 
     data_dir = './dataset_cheese/'
     object_labels = [0, 1, 2, 3]
-    images_v = [f'{data_dir}v__{j}.png' for j in range(0, 299)]
-    images_p = [f'{data_dir}pb__{j}.png' for j in range(0, 299)]
-    images_c = [f'{data_dir}cb__{j}.png' for j in range(0, 299)]
-    images_t = [f'{data_dir}tb__{j}.png' for j in range(0, 299)]
-
+    images_v = [f'{data_dir}cv__{j}.png' for j in range(0, 400)]
+    images_p = [f'{data_dir}pb__{j}.png' for j in range(0, 400)]
+    
     dataset_info = []  # Lista para guardar información completa de cada imagen
     features = []
     labels = []
 
     mat_images = []
 
-    for i in range(0, 299):
+    for i in range(0, 400):
         img = cv2.imread(images_v[i])
         img = img/255
         mat_images.append(img)
@@ -36,18 +34,6 @@ def main():
         mat_images.append(img)
         features.append(img)
         labels.append(object_labels[1])
-
-        img = cv2.imread(images_c[i])
-        img = img/255
-        mat_images.append(img)
-        features.append(img)
-        labels.append(object_labels[2])
-
-        img = cv2.imread(images_t[i])
-        img = img/255
-        mat_images.append(img)
-        features.append(img)
-        labels.append(object_labels[3])
 
     features = np.array(features)
     labels = np.array(labels)
@@ -84,7 +70,7 @@ def main():
     model.add(layers.Flatten())
     model.add(layers.Dense(64, activation='relu'))  # Capa oculta
     model.add(layers.Dropout(0.2))
-    model.add(layers.Dense(3, activation='softmax'))  # Capa de salida (3 clases)
+    model.add(layers.Dense(2, activation='softmax'))  # Capa de salida (3 clases)
 
 # Resumen del modelo
     model.summary()
@@ -95,19 +81,19 @@ def main():
     metrics=['accuracy']  # Métrica principal
     )
 
-    early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
     model.fit(X_train, y_train, batch_size=32, epochs=100, validation_data=(X_test, y_test), callbacks=[early_stopping])
 
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
     print(f"Precisión en el conjunto de prueba: {test_acc * 100:.2f}%")
 
-    model.save('chess_model.h5')
+    model.save('chess_model.keras')
 
     print('Modelo guardado')
 
-    model = models.load_model('chess_model.h5')
-    imagen = cv2.imread("dataset_cheese/v__62.png")
+    model = models.load_model('chess_model.keras')
+    imagen = cv2.imread("dataset_cheese/cv__62.png")
     imagen = cv2.resize(imagen, (200, 200))
     imagen = np.expand_dims(img, axis=0)
     print(imagen.shape)

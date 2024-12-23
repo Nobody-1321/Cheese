@@ -1,5 +1,7 @@
 imgtemp/*
 cheese/__pycache__/*
 *.png
-dataset_chess
+dataset_cheese
+*.h5
 *.txt
+*.keras

@@ -232,11 +232,6 @@ def capture_video(camera_index, width, height, fps):
     cap.set(cv.CAP_PROP_FPS, fps)
     return cap
 
-def image_to_texture(image):
-    image = cv.cvtColor(image, cv.COLOR_BGR2RGBA)
-    image_data = image.flatten().astype(np.float32) / 255.0
-    return image_data
-
 def resize_image(image, width, height):
     """
     Resize an image
