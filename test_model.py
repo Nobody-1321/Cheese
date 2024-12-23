@@ -10,7 +10,7 @@ def main():
     object_labels = [0, 1]
     
     images_v = [f'{data_dir}v__{j}.png' for j in range(260, 290)]
-    images_p = [f'{data_dir}cb__{j}.png' for j in range(260, 290)]
+    images_p = [f'{data_dir}tb__{j}.png' for j in range(260, 290)]
     
     features = []
     labels = []
@@ -32,7 +32,7 @@ def main():
     labels = np.array(labels)
 
     # Cargar el modelo
-    model = models.load_model('chess_model.h5')
+    model = models.load_model('chess_model.keras')
 
     # Realizar predicciones
     predictions = model.predict(features, verbose=1)

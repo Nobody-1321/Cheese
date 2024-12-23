@@ -1,6 +1,5 @@
 imgtemp/*
 cheese/__pycache__/*
-*.png
 dataset_cheese
 *.h5
 *.txt
