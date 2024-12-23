@@ -13,3 +13,5 @@ Machine Learning: TensorFlow/Keras for building and training models.
     
 
 **If you're interested in the project and would like to know more about how the implementation was done, stay tuned! The detailed description and documentation of the project will soon be added to the repository's Wiki.**
+
+![image1](./img/cheese.png "image1")
